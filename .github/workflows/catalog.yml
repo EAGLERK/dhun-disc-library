@@ -1,0 +1,42 @@
+name: Build album catalog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - data/albums.json
+      - scripts/build-catalog.mjs
+      - .github/workflows/catalog.yml
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 1 * *" # monthly: refresh preview links and artwork
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install sharp
+        run: npm install --no-save --no-package-lock sharp@0.33.5
+      - name: Build catalog.json from Apple's iTunes Search API
+        run: node scripts/build-catalog.mjs
+      - name: Commit catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add catalog.json catalog-report.md
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Update album catalog from Apple Music"
+          git pull --rebase origin main
+          git push origin HEAD:main

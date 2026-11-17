@@ -1338,7 +1338,9 @@ let tagLib=null;
 function loadTagLib(){
   if(window.jsmediatags)return Promise.resolve(window.jsmediatags);
   if(tagLib)return tagLib;
-  tagLib=new Promise((res,rej)=>{const s=document.createElement("script");s.src="vendor/jsmediatags.min.js";s.onload=()=>window.jsmediatags?res(window.jsmediatags):rej();s.onerror=rej;document.head.appendChild(s)});
+  // the site serves its own copy; the official npm build on jsDelivr is the fallback
+  const add=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=()=>window.jsmediatags?res(window.jsmediatags):rej();s.onerror=rej;document.head.appendChild(s)});
+  tagLib=add("vendor/jsmediatags.min.js").catch(()=>add("https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"));
   return tagLib;
 }
 const readTags=(lib,file)=>new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v)}};

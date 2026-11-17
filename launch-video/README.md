@@ -20,7 +20,7 @@ Full storyboard with frames from both cuts: [`Dhun-launch-storyboard.pdf`](Dhun-
 | 6 · Logo + CTA | 26–30 s | 780–900 | Dhun mark builds, "Real albums. Your music. One shelf.", "Open the shelf". |
 
 Album covers in the video are invented on purpose: no label artwork in an advert. The layout, genres,
-languages and 1955–2024 timeline match the live site. The storyboard PDF describes the first cut (v1).
+languages and 1955–2024 timeline match the live site. The storyboard PDF matches this cut (v2).
 
 ## Edit
 

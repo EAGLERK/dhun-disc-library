@@ -27,3 +27,6 @@ html, body { background: #e8e9e7; }
   font: 500 14px var(--font-body); color: var(--ink); }
 .lmenu div.hl { background: #e6e7e5; }
 .lmenu div b { font-weight: 500; color: var(--signal); }
+
+/* The language menu drops over the shelf: keep the whole top bar above the 3D cases. */
+.dhun-root .top { position: relative; z-index: 5; }

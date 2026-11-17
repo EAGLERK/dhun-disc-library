@@ -63,7 +63,7 @@ function scoreCollection(c, want) {
   else if (norm(want.artist).split(" ").some((p) => p.length > 3 && ar.includes(p))) s += 2;
   const name = (c.collectionName + " " + c.artistName).toLowerCase();
   const wantName = want.album.toLowerCase();
-  for (const bad of ["karaoke", "tribute", "cover", "lullaby", "8 bit", "8-bit", "piano renditions", "lofi", "lo-fi", "slowed", "reverb", "remix", "instrumental", "- single", "live"])
+  for (const bad of ["karaoke", "tribute", "cover", "lullaby", "8 bit", "8-bit", "piano renditions", "lofi", "lo-fi", "slowed", "reverb", "remix", "instrumental", "- single", "live", "dialogue"])
     if (name.includes(bad) && !wantName.includes(bad)) s -= 6;
   for (const lw of OTHER_LANGS) if (lw !== LANG_WORD[want.lang] && new RegExp(`[\\(\\[]\\s*${lw}\\s*[\\)\\]]`, "i").test(c.collectionName)) s -= 10;
   if ((c.trackCount || 0) <= 2) s -= 3;
@@ -102,11 +102,13 @@ const albums = [], missed = [], report = [];
 for (const [i, want] of src.albums.entries()) {
   process.stdout.write(`[${i + 1}/${src.albums.length}] ${want.artist} — ${want.album} … `);
   const cc = want.cc || "us";
+  const ranked = [];
   const best = (rows) => {
     let pick = null, sc = -99;
     for (const c of rows) {
       // prefer the plain original over deluxe/anniversary editions when both match
       const v = scoreCollection(c, want) + Math.min(c.trackCount || 0, 12) * 0.02 - (tidyTitle(c.collectionName) !== c.collectionName.trim() && !/soundtrack|score/i.test(c.collectionName) ? 0.3 : 0);
+      if (v >= 8 && !ranked.some((r) => r.c.collectionId === c.collectionId)) ranked.push({ c, v });
       if (v > sc) { sc = v; pick = c; }
     }
     return { pick, sc };
@@ -128,10 +130,19 @@ for (const [i, want] of src.albums.entries()) {
     for (const t of tries) { const r = await t(); if (r.sc > found.sc) found = r; if (found.sc >= 8) break; }
   } catch (e) { console.log("error"); missed.push({ ...want, why: e.message }); continue; }
   if (!found.pick || found.sc < 8) { console.log("not found"); missed.push({ ...want, why: found.pick ? `best match too weak (${found.pick.collectionName} / ${found.pick.artistName})` : "no results" }); continue; }
-  let rows;
-  try { rows = await itunes.lookup({ id: String(found.pick.collectionId), entity: "song", limit: "200", country: cc }); }
-  catch (e) { console.log("lookup error"); missed.push({ ...want, why: e.message }); continue; }
+  // when the list names a song, take the first good match that actually contains it (dubs share titles)
+  ranked.sort((a, b) => b.v - a.v);
+  const cands = want.track ? ranked.slice(0, 4).map((r) => r.c) : [found.pick];
+  let rows = null;
+  try {
+    for (const cand of cands) {
+      const r = await itunes.lookup({ id: String(cand.collectionId), entity: "song", limit: "200", country: cc });
+      if (!want.track || r.some((t) => t.wrapperType === "track" && squash(t.trackName).includes(squash(want.track)))) { rows = r; break; }
+    }
+  } catch (e) { console.log("lookup error"); missed.push({ ...want, why: e.message }); continue; }
+  if (!rows) { console.log("song not found"); missed.push({ ...want, why: `no version on Apple contains "${want.track}"` }); continue; }
   const c = rows.find((r) => r.wrapperType === "collection") || found.pick;
+  if (albums.some((x) => x.id === "it" + c.collectionId)) { console.log("duplicate"); missed.push({ ...want, why: `same Apple album as an earlier entry (${c.collectionName})` }); continue; }
   const pick = rows.filter((r) => r.wrapperType === "track" && r.kind === "song");
   const tracks = pick.filter((t) => t.previewUrl)
     .sort((a, b) => (a.discNumber - b.discNumber) || (a.trackNumber - b.trackNumber))

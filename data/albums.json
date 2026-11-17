@@ -1,5 +1,5 @@
 {
-  "_note": "Curated shelf. year = original release year (Apple often lists reissue dates). cc = Apple storefront to search. Albums Apple can't find are skipped and listed in catalog-report.md.",
+  "_note": "Curated shelf. track = a song the right version must contain (Apple lists dubs under the same title). year = original release year (Apple often lists reissue dates). cc = Apple storefront to search. Albums Apple can't find are skipped and listed in catalog-report.md.",
   "genres": ["Pop", "Rock", "Electronic", "Jazz", "Folk", "Film"],
   "languages": [["en", "English"], ["hi", "Hindi"], ["ta", "Tamil"], ["es", "Spanish"], ["ja", "Japanese"]],
   "albums": [
@@ -26,6 +26,7 @@
     { "artist": "Hans Zimmer", "album": "Interstellar", "lang": "en", "genre": "Film", "year": 2014, "cc": "us" },
     { "artist": "Ludwig Göransson", "album": "Oppenheimer", "lang": "en", "genre": "Film", "year": 2023, "cc": "us" },
 
+    { "artist": "A.R. Rahman", "album": "Roja", "lang": "hi", "genre": "Film", "year": 1993, "cc": "in", "track": "Yeh Haseen Vadiyan" },
     { "artist": "A.R. Rahman", "album": "Dil Se", "lang": "hi", "genre": "Film", "year": 1998, "cc": "in" },
     { "artist": "Shankar-Ehsaan-Loy", "album": "Dil Chahta Hai", "lang": "hi", "genre": "Film", "year": 2001, "cc": "in" },
     { "artist": "A.R. Rahman", "album": "Rang De Basanti", "lang": "hi", "genre": "Film", "year": 2006, "cc": "in" },
@@ -45,14 +46,14 @@
     { "artist": "Ritviz", "album": "Dev", "lang": "hi", "genre": "Electronic", "year": 2020, "cc": "in" },
 
     { "artist": "Ilaiyaraaja", "album": "Mouna Ragam", "lang": "ta", "genre": "Film", "year": 1986, "cc": "in" },
-    { "artist": "A.R. Rahman", "album": "Roja", "lang": "ta", "genre": "Film", "year": 1992, "cc": "in" },
+    { "artist": "A.R. Rahman", "album": "Roja", "lang": "ta", "genre": "Film", "year": 1992, "cc": "in", "track": "Chinna Chinna Aasai" },
     { "artist": "A.R. Rahman", "album": "Bombay", "lang": "ta", "genre": "Film", "year": 1995, "cc": "in" },
     { "artist": "A.R. Rahman", "album": "Alaipayuthey", "lang": "ta", "genre": "Film", "year": 2000, "cc": "in" },
     { "artist": "Harris Jayaraj", "album": "Minnale", "lang": "ta", "genre": "Film", "year": 2001, "cc": "in" },
-    { "artist": "Yuvan Shankar Raja", "album": "7/G Rainbow Colony", "lang": "ta", "genre": "Film", "year": 2004, "cc": "in" },
+    { "artist": "Yuvan Shankar Raja", "album": "7/G Rainbow Colony", "lang": "ta", "genre": "Film", "year": 2004, "cc": "in", "track": "Kanaa Kaanum Kaalangal" },
     { "artist": "A.R. Rahman", "album": "Vinnaithaandi Varuvaayaa", "lang": "ta", "genre": "Film", "year": 2010, "cc": "in" },
     { "artist": "G.V. Prakash Kumar", "album": "Aadukalam", "lang": "ta", "genre": "Film", "year": 2011, "cc": "in" },
-    { "artist": "Santhosh Narayanan", "album": "Kaala", "lang": "ta", "genre": "Film", "year": 2018, "cc": "in" },
+    { "artist": "Santhosh Narayanan", "album": "Kaala", "lang": "ta", "genre": "Film", "year": 2018, "cc": "in", "track": "Semma Weightu" },
     { "artist": "Anirudh Ravichander", "album": "Vikram", "lang": "ta", "genre": "Film", "year": 2022, "cc": "in" },
     { "artist": "Hiphop Tamizha", "album": "Hiphop Tamizhan", "lang": "ta", "genre": "Pop", "year": 2012, "cc": "in" },
     { "artist": "The Casteless Collective", "album": "Magizhchi", "lang": "ta", "genre": "Folk", "year": 2019, "cc": "in" },

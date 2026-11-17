@@ -1,0 +1,20 @@
+// Renders public/soundtrack.wav with the Dhun site's own audio engine in headless Chrome.
+import { chromium } from 'playwright';
+import fs from 'fs';
+const cfg = JSON.parse(fs.readFileSync('../src/config.json', 'utf8'));
+let eng = fs.readFileSync('engine.js', 'utf8');
+const hook = fs.readFileSync('soundtrack.js', 'utf8');
+const marker = '  return api;\n})();';
+if (eng.split(marker).length !== 2) throw new Error('engine marker not found exactly once');
+eng = eng.replace(marker, hook + '\n' + marker) + '\nwindow.__P = Player; window.__ALL = ALL;';
+const html = `<!doctype html><meta charset="utf-8"><script>${eng}</script>`;
+fs.writeFileSync('/tmp/dhun-audio.html', html);
+const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+const p = await b.newPage(); const errs = [];
+p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+await p.goto('file:///tmp/dhun-audio.html');
+const P = { ...cfg, trackFrom: process.argv[2] || 'Night Shift Geometry', scrubTicks: +(process.argv[3] || 70) };
+const r = await p.evaluate(async (P) => await window.__P.soundtrack(P), P);
+fs.writeFileSync('../public/soundtrack.wav', Buffer.from(r.wav, 'base64'));
+console.log(JSON.stringify({ track: r.track, peak: +r.peak.toFixed(3), rms: +r.rms.toFixed(4), root: r.root }), 'errors:', JSON.stringify(errs));
+await b.close();

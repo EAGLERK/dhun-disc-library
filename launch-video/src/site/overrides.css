@@ -1,0 +1,29 @@
+/* Frame-pure rendering: every moving value is set inline from the frame number. */
+*, *::before, *::after { transition: none !important; animation: none !important; }
+html, body { background: #e8e9e7; }
+.dhun-root { position: relative; overflow: hidden; }
+.dhun-root .app { height: 100%; }
+.dhun-root .detail { position: absolute !important; }
+.dhun-root .detail::before { opacity: var(--flash, 0) !important; }
+.dhun-root .cursor-disc { display: none; }
+.dhun-root .rng { pointer-events: none; }
+
+/* Values the site computes from its own viewport, frozen at the real page size. */
+.dk { --gutter: 36px; }
+.dk .top { column-gap: 57.6px; }
+.dk .d-num { font-size: 475px; }
+.dk .d-title { font-size: 80.6px; }
+.dk .d-hero { --cw: 417.6px; }
+.mob { --gutter: 16px; }
+.mob .top { column-gap: 24px; }
+.mob .d-num { font-size: 190px; }
+.mob .d-title { font-size: 38px; }
+.mob .d-hero { --cw: 195px; }
+
+/* Language menu (the native one can't be filmed) */
+.lmenu { position: absolute; right: 0; top: calc(100% + 8px); background: #fbfbfa; border-radius: 14px; padding: 8px;
+  box-shadow: 0 18px 40px -12px rgba(20, 22, 26, .28), 0 0 0 1px rgba(20, 22, 26, .07); transform-origin: 100% 0; z-index: 40; }
+.lmenu div { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-radius: 9px;
+  font: 500 14px var(--font-body); color: var(--ink); }
+.lmenu div.hl { background: #e6e7e5; }
+.lmenu div b { font-weight: 500; color: var(--signal); }

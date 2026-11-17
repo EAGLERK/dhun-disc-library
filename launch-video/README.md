@@ -8,6 +8,8 @@ from `index.html` in the repo root, and the soundtrack is rendered by the site's
 
 ## Storyboard
 
+Full storyboard with frames from both cuts: [`Dhun-launch-storyboard.pdf`](Dhun-launch-storyboard.pdf).
+
 | Scene | Time | Frames | What happens |
 |---|---|---|---|
 | 1 · Hook | 0–3.5 s | 0–105 | A grey music list scrolls. "Thousands of songs." "One endless list." |

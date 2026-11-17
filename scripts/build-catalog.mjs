@@ -6,7 +6,7 @@ import fs from "node:fs/promises";
 const SRC = new URL("../data/albums.json", import.meta.url);
 const OUT = new URL("../catalog.json", import.meta.url);
 const REPORT = new URL("../catalog-report.md", import.meta.url);
-const GAP_MS = 3200;          // Apple allows roughly 20 requests a minute per IP
+const GAP_MS = 4000;          // Apple allows roughly 20 requests a minute per IP; stay well under it
 const MAX_TRACKS = 14;
 
 let sharp = null;
@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const norm = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
   .replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 // strip edition tags Apple appends: "(Original Motion Picture Soundtrack)", "[Deluxe Edition]", " - EP", "-30th Anniversary Edition-", "(feat. …)"
-const EDITION = /(original|motion picture|soundtrack|background score|\bscore\b|music from|deluxe|remaster|expanded|legacy|anniversary|bonus|edition|version|feat\.|\bft\.)/i;
+const EDITION = /(original|motion picture|soundtrack|background score|\bscore\b|music from|deluxe|remaster|expanded|legacy|anniversary|bonus|edition|version|feat\.|\bft\.|リマスター|バージョン|記念|デラックス|エディション)/i;
 function tidyTitle(s) {
   let t = String(s).trim(), prev;
   do {
@@ -40,7 +40,13 @@ async function itunes(params, endpoint = "search") {
     if (wait > 0) await sleep(wait);
     last = Date.now();
     const res = await fetch(url, { headers: { "User-Agent": "dhun-catalog-builder/1.0" } });
-    if (res.ok) return (await res.json()).results || [];
+    if (res.ok) {
+      const results = (await res.json()).results || [];
+      if (results.length || attempt > 0 || endpoint !== "search") return results;
+      console.warn("  empty result, retrying once");
+      await sleep(10000);
+      continue;
+    }
     console.warn(`  HTTP ${res.status}, backing off`);
     await sleep(20000 * (attempt + 1));
   }
@@ -105,13 +111,21 @@ for (const [i, want] of src.albums.entries()) {
     }
     return { pick, sc };
   };
-  let found;
+  // three ways in, stopping at the first exact match: album search, song search, album-only search
+  const fromSongs = (rows) => {
+    const m = new Map();
+    for (const r of rows) if (r.wrapperType === "track" && r.kind === "song" && !m.has(r.collectionId))
+      m.set(r.collectionId, { collectionId: r.collectionId, collectionName: r.collectionName, artistName: r.collectionArtistName || r.artistName, trackCount: r.trackCount });
+    return [...m.values()];
+  };
+  const tries = [
+    async () => best(await itunes({ term: `${want.artist} ${want.album}`, media: "music", entity: "album", limit: "50", country: cc })),
+    async () => best(fromSongs(await itunes({ term: `${want.artist} ${want.album}`, media: "music", entity: "song", limit: "100", country: cc }))),
+    async () => best(await itunes({ term: tidyTitle(want.album), media: "music", entity: "album", limit: "50", country: cc })),
+  ];
+  let found = { pick: null, sc: -99 };
   try {
-    found = best(await itunes({ term: `${want.artist} ${want.album}`, media: "music", entity: "album", limit: "50", country: cc }));
-    if (found.sc < 8) {
-      const alt = best(await itunes({ term: tidyTitle(want.album), media: "music", entity: "album", limit: "50", country: cc }));
-      if (alt.sc > found.sc) found = alt;
-    }
+    for (const t of tries) { const r = await t(); if (r.sc > found.sc) found = r; if (found.sc >= 8) break; }
   } catch (e) { console.log("error"); missed.push({ ...want, why: e.message }); continue; }
   if (!found.pick || found.sc < 8) { console.log("not found"); missed.push({ ...want, why: found.pick ? `best match too weak (${found.pick.collectionName} / ${found.pick.artistName})` : "no results" }); continue; }
   let rows;

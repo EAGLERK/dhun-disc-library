@@ -1,6 +1,6 @@
 # Catalog report
 
-Generated 2026-11-17T08:28:16.172Z. Matched 78 of 80 albums.
+Generated 2026-11-17T08:42:14.451Z. Matched 77 of 81 albums.
 
 ## Matched
 
@@ -28,6 +28,7 @@ Generated 2026-11-17T08:28:16.172Z. Matched 78 of 80 albums.
 | Joni Mitchell — Blue | Joni Mitchell — Blue | 1971 (Apple 1971) | 10 |
 | Hans Zimmer — Interstellar | Hans Zimmer — Interstellar (Original Motion Picture Soundtrack) [Expanded Edition] | 2014 (Apple 2014) | 14 |
 | Ludwig Göransson — Oppenheimer | Ludwig Göransson — Oppenheimer (Original Motion Picture Soundtrack) | 2023 (Apple 2023) | 14 |
+| A.R. Rahman — Roja | A.R. Rahman — Roja (Original Motion Picture Soundtrack) | 1993 (Apple 1993) | 12 |
 | A.R. Rahman — Dil Se | A.R. Rahman — Dil Se (Original Motion Picture Soundtrack) | 1998 (Apple 1998) | 6 |
 | Shankar-Ehsaan-Loy — Dil Chahta Hai | Shankar Ehsaan Loy & Mike Harvey — Dil Chahta Hai (Original Motion Picture Soundtrack) | 2001 (Apple 2001) | 9 |
 | A.R. Rahman — Rang De Basanti | A.R. Rahman — Rang De Basanti (Original Motion Picture Soundtrack) | 2005 (Apple 2005) | 10 |
@@ -46,13 +47,11 @@ Generated 2026-11-17T08:28:16.172Z. Matched 78 of 80 albums.
 | Midival Punditz — Midival Times | Midival Punditz — Midival Times | 2002 (Apple 2005) | 11 |
 | Ritviz — Dev | Ritviz — Dev - EP | 2021 (Apple 2021) | 6 |
 | Ilaiyaraaja — Mouna Ragam | Ilaiyaraaja & Vaalee — Mouna Ragam (Original Motion Picture Soundtrack) - EP | 1986 (Apple 1986) | 5 |
-| A.R. Rahman — Roja | A.R. Rahman — Roja (Original Motion Picture Soundtrack) | 1993 (Apple 1993) | 12 |
 | A.R. Rahman — Bombay | A.R. Rahman — Bombay (Original Motion Picture Soundtrack) | 1995 (Apple 1995) | 9 |
 | A.R. Rahman — Alaipayuthey | A.R. Rahman — Alaipayuthey (Original Motion Picture Soundtrack) | 2000 (Apple 2000) | 14 |
-| Yuvan Shankar Raja — 7/G Rainbow Colony | Yuvan Shankar Raja — 7/G Rainbow Colony (Original Motion Picture Soundtrack) | 2004 (Apple 2013) | 14 |
 | A.R. Rahman — Vinnaithaandi Varuvaayaa | A.R. Rahman — Vinnaithaandi Varuvaayaa (Original Motion Picture Soundtrack) | 2010 (Apple 2010) | 7 |
 | G.V. Prakash Kumar — Aadukalam | G.V. Prakash Kumar — Aadukalam (Original Motion Picture Soundtrack) | 2010 (Apple 2010) | 7 |
-| Santhosh Narayanan — Kaala | Santhosh Narayanan — Kaala (Dialogues) [Original Motion Picture Soundtrack] | 2018 (Apple 2018) | 14 |
+| Santhosh Narayanan — Kaala | Santhosh Narayanan — Kaala (Tamil) [Original Motion Picture Soundtrack] | 2018 (Apple 2018) | 10 |
 | Anirudh Ravichander — Vikram | Anirudh Ravichander — Vikram (Original Background Score) | 2022 (Apple 2022) | 14 |
 | Hiphop Tamizha — Hiphop Tamizhan | Hiphop Tamizha — Hiphop Tamizhan | 2012 (Apple 2012) | 11 |
 | Shakira — Pies Descalzos | Shakira — Pies Descalzos | 1995 (Apple 1995) | 11 |
@@ -87,5 +86,7 @@ Generated 2026-11-17T08:28:16.172Z. Matched 78 of 80 albums.
 
 ## Missed
 
+- A.R. Rahman — Roja (in): no version on Apple contains "Chinna Chinna Aasai"
 - Harris Jayaraj — Minnale (in): best match too weak (Rehnaa Hai Terre Dil Mein (Original Motion Picture Soundtrack) / Harris Jayaraj, Anand Raaj Anand, Vishal & Shekhar & Aadesh Shrivastava)
+- Yuvan Shankar Raja — 7/G Rainbow Colony (in): no version on Apple contains "Kanaa Kaanum Kaalangal"
 - The Casteless Collective — Magizhchi (in): best match too weak (En Manam Magizhchi / D.Babu & Umn Ministry Chennai)

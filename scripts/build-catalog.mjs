@@ -15,11 +15,26 @@ try { sharp = (await import("sharp")).default; } catch { console.warn("sharp not
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const norm = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
   .replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
-const tidyTitle = (s) => s.replace(/\s*[\(\[](original (motion picture )?soundtrack|music from[^)\]]*|deluxe[^)\]]*|remaster[^)\]]*|\d{4} remaster[^)\]]*|expanded[^)\]]*|legacy[^)\]]*|anniversary[^)\]]*|bonus[^)\]]*)[\)\]]\s*$/i, "").trim();
+// strip edition tags Apple appends: "(Original Motion Picture Soundtrack)", "[Deluxe Edition]", " - EP", "-30th Anniversary Edition-", "(feat. …)"
+const EDITION = /(original|motion picture|soundtrack|background score|\bscore\b|music from|deluxe|remaster|expanded|legacy|anniversary|bonus|edition|version|feat\.|\bft\.)/i;
+function tidyTitle(s) {
+  let t = String(s).trim(), prev;
+  do {
+    prev = t;
+    t = t.replace(/\s+-\s+(EP|Single)$/i, "")
+         .replace(/\s*-[^-]*(anniversary|edition|remaster)[^-]*-\s*$/i, "")
+         .replace(/\s*[\(\[]([^\)\]]*)[\)\]]\s*$/, (m, inner) => (EDITION.test(inner) ? "" : m));
+  } while (t !== prev && t);
+  return t.trim() || String(s).trim();
+}
+const squash = (s) => norm(s).replace(/\s+/g, "");
+const OTHER_LANGS = ["tamil", "telugu", "hindi", "malayalam", "kannada", "marathi", "bengali", "punjabi"];
+const LANG_WORD = { ta: "tamil", hi: "hindi" };
 
 let last = 0;
-async function itunes(params) {
-  const url = "https://itunes.apple.com/search?" + new URLSearchParams(params);
+itunes.lookup = (params) => itunes(params, "lookup");
+async function itunes(params, endpoint = "search") {
+  const url = `https://itunes.apple.com/${endpoint}?` + new URLSearchParams(params);
   for (let attempt = 0; attempt < 4; attempt++) {
     const wait = last + GAP_MS - Date.now();
     if (wait > 0) await sleep(wait);
@@ -32,14 +47,20 @@ async function itunes(params) {
   throw new Error("iTunes search failed: " + url);
 }
 
+// A match needs the exact title (after edition tags are stripped) AND the artist. Score >= 8 passes.
 function scoreCollection(c, want) {
-  const a = norm(c.collectionName), w = norm(want.album), ar = norm(c.artistName), wa = norm(want.artist);
+  const a = squash(tidyTitle(c.collectionName)), w = squash(tidyTitle(want.album));
+  const ar = squash(c.artistName), wa = squash(want.artist);
   let s = 0;
-  if (a === w) s += 6; else if (a.startsWith(w + " ") || a.startsWith(w)) s += 4; else if (a.includes(w)) s += 2; else return -1;
+  if (a === w) s += 6; else if (a.includes(w)) s += 1; else return -1;
   if (ar.includes(wa) || wa.includes(ar)) s += 3;
-  else if (wa.split(" ").some((p) => p.length > 2 && ar.includes(p))) s += 1;
-  if (/karaoke|tribute|cover|instrumental version|lullaby|8 bit|piano renditions/i.test(c.collectionName + " " + c.artistName)) s -= 8;
-  if (/live|remix|acoustic/i.test(c.collectionName) && !/live|remix|acoustic/i.test(want.album)) s -= 2;
+  else if (norm(want.artist).split(" ").some((p) => p.length > 3 && ar.includes(p))) s += 2;
+  const name = (c.collectionName + " " + c.artistName).toLowerCase();
+  const wantName = want.album.toLowerCase();
+  for (const bad of ["karaoke", "tribute", "cover", "lullaby", "8 bit", "8-bit", "piano renditions", "lofi", "lo-fi", "slowed", "reverb", "remix", "instrumental", "- single", "live"])
+    if (name.includes(bad) && !wantName.includes(bad)) s -= 6;
+  for (const lw of OTHER_LANGS) if (lw !== LANG_WORD[want.lang] && new RegExp(`[\\(\\[]\\s*${lw}\\s*[\\)\\]]`, "i").test(c.collectionName)) s -= 10;
+  if ((c.trackCount || 0) <= 2) s -= 3;
   return s;
 }
 
@@ -67,27 +88,37 @@ async function spineColours(artUrl) {
   }
 }
 
+// Apple's release year is used when it agrees with the curated year to within one year;
+// a bigger gap means Apple lists a reissue, so the original year stands.
+const yearFor = (curated, appleDate) => { const y = +(appleDate || "").slice(0, 4); return y && Math.abs(y - curated) <= 1 ? y : curated; };
 const src = JSON.parse(await fs.readFile(SRC, "utf8"));
 const albums = [], missed = [], report = [];
 for (const [i, want] of src.albums.entries()) {
   process.stdout.write(`[${i + 1}/${src.albums.length}] ${want.artist} — ${want.album} … `);
-  let songs = [];
+  const cc = want.cc || "us";
+  const best = (rows) => {
+    let pick = null, sc = -99;
+    for (const c of rows) {
+      // prefer the plain original over deluxe/anniversary editions when both match
+      const v = scoreCollection(c, want) + Math.min(c.trackCount || 0, 12) * 0.02 - (tidyTitle(c.collectionName) !== c.collectionName.trim() && !/soundtrack|score/i.test(c.collectionName) ? 0.3 : 0);
+      if (v > sc) { sc = v; pick = c; }
+    }
+    return { pick, sc };
+  };
+  let found;
   try {
-    songs = await itunes({ term: `${want.artist} ${want.album}`, media: "music", entity: "song", limit: "100", country: want.cc || "us" });
-    if (!songs.length) songs = await itunes({ term: want.album, media: "music", entity: "song", limit: "100", country: want.cc || "us" });
+    found = best(await itunes({ term: `${want.artist} ${want.album}`, media: "music", entity: "album", limit: "50", country: cc }));
+    if (found.sc < 8) {
+      const alt = best(await itunes({ term: tidyTitle(want.album), media: "music", entity: "album", limit: "50", country: cc }));
+      if (alt.sc > found.sc) found = alt;
+    }
   } catch (e) { console.log("error"); missed.push({ ...want, why: e.message }); continue; }
-  const byCol = new Map();
-  for (const s of songs) if (s.wrapperType === "track" && s.kind === "song") {
-    if (!byCol.has(s.collectionId)) byCol.set(s.collectionId, []);
-    byCol.get(s.collectionId).push(s);
-  }
-  let pick = null, pickScore = -1;
-  for (const list of byCol.values()) {
-    const sc = scoreCollection(list[0], want) + Math.min(list.filter((t) => t.previewUrl).length, 10) * 0.15;
-    if (sc > pickScore) { pickScore = sc; pick = list; }
-  }
-  if (!pick || pickScore < 3) { console.log("not found"); missed.push({ ...want, why: pick ? `best match too weak (${pick[0].collectionName} / ${pick[0].artistName})` : "no results" }); continue; }
-  const c = pick[0];
+  if (!found.pick || found.sc < 8) { console.log("not found"); missed.push({ ...want, why: found.pick ? `best match too weak (${found.pick.collectionName} / ${found.pick.artistName})` : "no results" }); continue; }
+  let rows;
+  try { rows = await itunes.lookup({ id: String(found.pick.collectionId), entity: "song", limit: "200", country: cc }); }
+  catch (e) { console.log("lookup error"); missed.push({ ...want, why: e.message }); continue; }
+  const c = rows.find((r) => r.wrapperType === "collection") || found.pick;
+  const pick = rows.filter((r) => r.wrapperType === "track" && r.kind === "song");
   const tracks = pick.filter((t) => t.previewUrl)
     .sort((a, b) => (a.discNumber - b.discNumber) || (a.trackNumber - b.trackNumber))
     .slice(0, MAX_TRACKS)
@@ -98,13 +129,13 @@ for (const [i, want] of src.albums.entries()) {
   albums.push({
     id: "it" + c.collectionId,
     title: tidyTitle(c.collectionName), fullTitle: c.collectionName,
-    artist: c.artistName, year: want.year, appleYear: +(c.releaseDate || "").slice(0, 4) || null,
+    artist: c.artistName, year: yearFor(want.year, c.releaseDate), appleYear: +(c.releaseDate || "").slice(0, 4) || null,
     genre: want.genre, lang: want.lang,
     art, url: (c.collectionViewUrl || "").split("?")[0],
     copyright: c.copyright || "", trackCount: c.trackCount || tracks.length,
     bg: col.bg, ink: col.ink, tracks,
   });
-  report.push(`| ${want.artist} — ${want.album} | ${c.artistName} — ${c.collectionName} | ${want.year} (${(c.releaseDate || "").slice(0, 4)}) | ${tracks.length} |`);
+  report.push(`| ${want.artist} — ${want.album} | ${c.artistName} — ${c.collectionName} | ${yearFor(want.year, c.releaseDate)} (Apple ${(c.releaseDate || "").slice(0, 4)}) | ${tracks.length} |`);
   console.log(`ok: ${c.collectionName} (${tracks.length} previews)`);
 }
 

@@ -96,6 +96,8 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .c-foot{position:absolute;left:1.6em;right:1.6em;bottom:0;height:4.2em;display:flex;align-items:center;justify-content:space-between}
 .c-foot span{font:500 .82em var(--font-mono);letter-spacing:.14em;display:flex;align-items:center;gap:.7em}
 .c-foot i{width:1.1em;height:1.1em;border-radius:50%;border:.34em solid currentColor}
+.cover.art{background-size:cover;background-position:center}
+.disc-print.art{background-position:center;background-size:cover}
 
 /* disc */
 .disc{position:relative;width:100%;height:100%;border-radius:50%;
@@ -165,7 +167,21 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .f-text.swap>:nth-child(3){animation-delay:.06s}
 @keyframes swap{from{opacity:0;transform:translateY(8px)}}
 
-.lang{grid-area:lang;justify-self:end}
+.lang{grid-area:lang;justify-self:end;display:flex;align-items:center;gap:10px}
+.add-btn{display:flex;align-items:center;gap:8px;font:500 14px var(--font-body);border:1px solid var(--line);border-radius:999px;padding:10px 16px;white-space:nowrap}
+.add-btn svg{width:15px;height:15px;flex:none}
+.add-btn:hover{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.drop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:color-mix(in oklab,var(--paper) 88%,transparent);backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.drop.on{opacity:1;pointer-events:auto}
+.drop-card{display:grid;gap:10px;justify-items:center;text-align:center;padding:44px 52px;border:2px dashed var(--ink);border-radius:28px;max-width:min(520px,calc(100vw - 32px))}
+.drop-card b{font:700 26px/1.15 var(--font-display);letter-spacing:-.01em}
+.drop-card p{color:var(--muted);font-size:15px;line-height:1.45;max-width:38ch}
+.drop-card .bar{width:220px;height:3px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
+.drop-card .bar i{display:block;height:100%;width:0;background:var(--ink)}
+.toast{position:fixed;left:50%;bottom:22px;z-index:70;transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--paper);
+  font:500 14px var(--font-body);padding:12px 18px;border-radius:999px;transition:opacity .25s,transform .35s cubic-bezier(.2,.8,.2,1);pointer-events:none;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
 .select{position:relative}
 .select select{-webkit-appearance:none;appearance:none;font:500 14px var(--font-body);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:10px 40px 10px 18px;cursor:pointer;min-width:190px}
 .select select:hover{border-color:var(--ink)}
@@ -206,6 +222,10 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .d-title span{display:block}
 .d-meta{color:color-mix(in oklab,var(--dink) 62%,transparent);margin-top:2px}
 .d-blurb{font-size:17px;line-height:1.5;max-width:52ch;margin-top:4px}
+.d-link{justify-self:start;display:inline-flex;align-items:center;gap:8px;margin-top:2px;font:500 14px var(--font-body);color:var(--tint);background:var(--dink);
+  padding:10px 16px;border-radius:999px;text-decoration:none}
+.d-link:hover{background:var(--d)}
+.d-link svg{width:15px;height:15px}
 .d-tracks{list-style:none;padding:0;margin-top:10px;border-top:1px solid color-mix(in oklab,var(--dink) 14%,transparent)}
 .d-tracks li{border-bottom:1px solid color-mix(in oklab,var(--dink) 14%,transparent)}
 .trk{width:100%;display:grid;grid-template-columns:28px 16px minmax(0,1fr) auto;align-items:center;gap:8px;padding:11px 4px;text-align:left;border-radius:4px}
@@ -270,7 +290,10 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .mob .brand .logo{height:22px}
 .mob .genre{grid-template-columns:minmax(0,1fr);gap:6px}
 .mob .genre .lab{line-height:1.2}
-.mob .select select{min-width:158px;padding:9px 36px 9px 16px}
+.mob .select select{min-width:0;width:132px;padding:9px 30px 9px 14px;font-size:13.5px}
+.mob .select::after{right:14px}
+.mob .add-btn{padding:0;width:37px;height:37px;justify-content:center}
+.mob .add-btn span{display:none}
 .mob .deck{gap:14px;padding-bottom:10px}
 .mob .row{grid-template-columns:minmax(0,1fr) auto;gap:10px 16px}
 .mob .focus{grid-column:1/-1;grid-row:1;grid-template-columns:42px minmax(0,1fr) 42px;gap:12px;width:100%}

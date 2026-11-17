@@ -1,5 +1,7 @@
 // Shelf state as a pure function of the frame. Geometry is the site's render() math.
-import { ALL, Y0, SPAN } from "./site/catalogue";
+// The video uses invented albums (no label artwork in an ad) laid out exactly like the real shelf:
+// six genres with Film, five languages, 1959–2023, plus four "My music" albums added from files.
+import { DEMO, finalize, PALS, MOTIFS, coverSVG, hashStr, yr } from "./site/catalogue";
 import cfg from "./config.json";
 import { Layout } from "./layout";
 import { clamp, lerp, prog, eio, eout, smooth } from "./anim";
@@ -10,9 +12,39 @@ export const W = 300, H = 300, R = 1150, STEP = 50, PUSH = W / 2 + 40, FAN = 24,
 const RAD = Math.PI / 180, DEG = 180 / Math.PI;
 
 type Al = any;
-const L0: Al[] = ALL;
-const L1: Al[] = ALL.filter((a: Al) => a.genre === "Jazz");
+export const GENRE_LIST = ["Pop", "Rock", "Electronic", "Jazz", "Folk", "Film"];
+export const FILM = GENRE_LIST.indexOf("Film") + 1; // slider stop (0 = All)
+
+/** the video catalogue: the demo albums re-dated across 1959–2023, ambient records filed as film scores */
+export const CAT: Al[] = finalize(DEMO.map((a: Al, i: number) => ({
+  ...a, kind: "itunes", genre: a.genre === "Ambient" ? "Film" : a.genre,
+  year: 1959 + Math.floor((i * 65) / DEMO.length),
+})));
+export const { Y0, Y1, SPAN } = yr();
+
+const OWN_SPEC: [string, string, number, string, string[]][] = [
+  ["Night Train", "Kabir Trio", 2016, "Jazz", ["Platform One", "Sleeper Car", "Junction at 3 AM", "Last Whistle"]],
+  ["Monsoon Tapes", "Riya & The Ferns", 2019, "Folk", ["First Rain", "Tin Roof Lullaby", "Puddle Song", "Petrichor"]],
+  ["Terrace Sessions", "Aditi Rao", 2021, "Pop", ["Kites", "Water Tank Views", "Golden Hour", "Neighbours"]],
+  ["Signal Lost", "Vihaan K.", 2023, "Electronic", ["No Bars", "Airplane Mode", "Buffering", "Reconnect"]],
+];
+export const OWN: Al[] = OWN_SPEC.map(([title, artist, year, genre, names], k) => {
+  const seed = hashStr(artist + title);
+  const al: Al = { kind: "file", id: "u" + (k + 1), title, artist, year, genre, lang: "me", langName: "My music", seed,
+    cat: "YOU-" + String(k + 1).padStart(3, "0"), t: year + 0.5,
+    tracks: names.map((name, i) => ({ name, sec: 168 + ((seed >> (i * 3)) % 140) })) };
+  al.pal = PALS[(seed + 3) % PALS.length];
+  al.motif = (seed >>> 3) % MOTIFS.length;
+  al.coverUrl = `url('data:image/svg+xml,${encodeURIComponent(coverSVG(al)).replace(/'/g, "%27")}')`;
+  const { bg, art } = al.pal;
+  al.accent = [art[1], art[2], art[3]].find((c: string) => c.toLowerCase() !== bg.toLowerCase());
+  return al;
+});
+
+const L0: Al[] = CAT;
+const L1: Al[] = CAT.filter((a: Al) => a.genre === "Film");
 const L2: Al[] = L1.filter((a: Al) => a.lang === "ta");
+const L3: Al[] = OWN;
 
 export function idxAt(arr: Al[], t: number) {
   const n = arr.length;
@@ -44,24 +76,24 @@ export function geometry(L: Layout) {
 /** rows the list scrolls past, and which album sits in the middle of the shelf when it appears */
 export function listGeom(L: Layout) {
   const nv = Math.ceil((L.app.h - L.list.hH) / L.list.rH);
-  const k0 = 24;
+  const k0 = 2; // the shelf opens on the early 1960s so the year drag can cover sixty years
   return { nv, k0, cur0: k0 + Math.floor(nv / 2), endRows: 240 + k0 };
 }
 
 export type ShelfItem = { al: Al; d: number; alpha: number };
 export type ShelfState = {
-  items: ShelfItem[]; cur: number; list: Al[]; listB: Al[]; p: number; pinT: number; scrub: boolean;
-  genre: number; lang: string; focus: Al; openAmt: number; count: string;
+  items: ShelfItem[]; cur: number; list: Al[]; p: number; pinT: number; scrub: boolean;
+  genre: number; lang: string; focus: Al; openAmt: number; count: string; total: number;
 };
 
 export function shelfAt(f: number, L: Layout): ShelfState {
   const { cur0 } = listGeom(L);
-  // year scrub on the full list
   const tA = L0[cur0].t, tB = B.yearTarget;
   const curDragEnd = idxAt(L0, tB + 0.02);
   const curY = Math.round(curDragEnd);
   const curG = nearest(L0, curY, L1);
   const curL = nearest(L1, curG, L2);
+  const curO = nearest(L2, curL, L3);
 
   let A = L0, Bl = L0, p = 0, curA = cur0, curB = cur0, scrub = false, pinT = 0;
   if (f < B.yearDrag[0]) { curA = curB = cur0; }
@@ -73,11 +105,14 @@ export function shelfAt(f: number, L: Layout): ShelfState {
     curA = curB = lerp(curDragEnd, curY, eout(prog(f, B.yearSettle[0], B.yearSettle[1])));
   } else if (f < B.langFilter[0]) {
     A = L0; Bl = L1; p = eio(prog(f, B.genreFilter[0], B.genreFilter[1])); curA = curY; curB = curG;
-  } else {
+  } else if (f < B.ownFilter[0]) {
     A = L1; Bl = L2; p = eio(prog(f, B.langFilter[0], B.langFilter[1])); curA = curG; curB = curL;
+  } else {
+    A = L2; Bl = L3; p = eio(prog(f, B.ownFilter[0], B.ownFilter[1])); curA = curL; curB = curO;
   }
-  const genre = f < B.genreClick + 4 ? 0 : lerp(0, 2, eout(prog(f, B.genreClick + 4, B.genreClick + 14)));
-  const lang = f < B.tamilClick + 2 ? "" : "ta";
+  let genre = f < B.genreClick + 4 ? 0 : lerp(0, FILM, eout(prog(f, B.genreClick + 4, B.genreClick + 14)));
+  if (f >= B.ownFilter[0]) genre = lerp(FILM, 0, eout(prog(f, B.ownFilter[0], B.ownFilter[0] + 10)));
+  const lang = f >= B.ownFilter[0] ? "me" : f < B.tamilClick + 2 ? "" : "ta";
 
   const inA = new Set(A), inB = new Set(Bl);
   const union = A === Bl ? A : Array.from(new Set([...A, ...Bl]));
@@ -96,11 +131,15 @@ export function shelfAt(f: number, L: Layout): ShelfState {
   const focusIdx = p < 0.5 ? Math.round(curA) : Math.round(curB);
   const focus = list[clamp(focusIdx, 0, list.length - 1)];
   if (!scrub) pinT = lerp(timeAt(A, curA), timeAt(Bl, curB), p);
-  const openAmt = eio(prog(f, B.discOut[0], B.discOut[1]));
+  const openAmt = eio(prog(f, B.discOut[0], B.discOut[1])) * (1 - eio(prog(f, B.discBack[0], B.discBack[1])));
+  const total = CAT.length + (f >= B.ownFilter[0] ? OWN.length : 0);
   const n = list.length;
-  const count = n === ALL.length ? `${ALL.length} discs` : `${n} of ${ALL.length} discs`;
-  return { items, cur, list, listB: Bl, p, pinT, scrub, genre, lang, focus, openAmt, count };
+  const count = n === total ? `${total} albums` : `${n} of ${total} albums`;
+  return { items, cur, list, p, pinT, scrub, genre, lang, focus, openAmt, count, total };
 }
+
+/** the album opened in the payoff: the front case once the Tamil filter has settled */
+export const payoffAlbum = (L: Layout) => shelfAt(B.langFilter[1] + 1, L).focus;
 
 export function caseTransform(d: number, alpha: number, openAmt: number) {
   const ad = Math.abs(d), sg = d < 0 ? -1 : 1, fe = smooth(clamp(1 - ad, 0, 1)), near = smooth(Math.min(ad, 1));
@@ -121,5 +160,3 @@ export function caseTransform(d: number, alpha: number, openAmt: number) {
     o: clamp(alpha * 3, 0, 1),
   };
 }
-
-export { L0, L1, L2, Y0, SPAN };

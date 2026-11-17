@@ -56,7 +56,13 @@ export const EndCard: React.FC<{ f: number; L: Layout }> = ({ f, L }) => {
         padding: "0 8%", font: `600 ${tagSize}px/1.15 var(--font-display)`, letterSpacing: "-.02em", color: "#14161a" }}>
         {words.map((wd, i) => {
           const t = prog(f, B.tagline + i * 3, B.tagline + i * 3 + 15);
-          return <span key={i} style={{ display: "inline-block", opacity: Math.min(1, eout(t) * 1.4), transform: `translateY(${((1 - back(t)) * 0.5).toFixed(3)}em)` }}>{wd}</span>;
+          const brk = L.kind === "mob" && wd === (cfg as any).taglineBreakAfter; // keep "One shelf." together on phones
+          return (
+            <React.Fragment key={i}>
+              <span style={{ display: "inline-block", opacity: Math.min(1, eout(t) * 1.4), transform: `translateY(${((1 - back(t)) * 0.5).toFixed(3)}em)` }}>{wd}</span>
+              {brk && <span style={{ flexBasis: "100%", height: 0 }} />}
+            </React.Fragment>
+          );
         })}
       </div>
       <div style={{ position: "absolute", left: 0, right: 0, top: cy + logoH / 2 + tagSize * (L.kind === "desk" ? 3.0 : 4.3), display: "flex", justifyContent: "center" }}>

@@ -30,3 +30,7 @@ html, body { background: #e8e9e7; }
 
 /* The language menu drops over the shelf: keep the whole top bar above the 3D cases. */
 .dhun-root .top { position: relative; z-index: 5; }
+
+/* the drop overlay and toast live inside the filmed window, not the browser viewport */
+.dhun-root .drop, .dhun-root .toast { position: absolute; }
+.dhun-root .drop { z-index: 70; backdrop-filter: blur(3px); background: color-mix(in oklab, var(--paper) 68%, transparent); }

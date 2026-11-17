@@ -3,8 +3,8 @@ import React from "react";
 import cfg from "./config.json";
 import { Layout } from "./layout";
 import { clamp, lerp, prog, eio, eout, site, press, smooth } from "./anim";
-import { shelfAt, caseTransform, geometry, W, H, R, OUT, PERSP, CAMH, STEP, Y0, SPAN } from "./shelf";
-import { coverText, discHTML, fmt, hs, GENRES, LANGS, esc } from "./site/catalogue";
+import { shelfAt, caseTransform, geometry, payoffAlbum, GENRE_LIST, FILM, W, H, R, OUT, PERSP, CAMH, STEP, Y0, SPAN } from "./shelf";
+import { coverText, discHTML, fmt, hs, LANGS, esc } from "./site/catalogue";
 import logo from "./site/logo.json";
 
 const B = cfg.beats;
@@ -49,6 +49,7 @@ const ICON = {
 const html = (s: string) => ({ __html: s });
 
 export const LANG_ITEMS = [["", "All languages"], ...LANGS] as [string, string][];
+const SHORT: Record<string, string> = { Electronic: "Elec" };
 
 export const DhunApp: React.FC<{ f: number; L: Layout; opacity: number }> = ({ f, L, opacity }) => {
   const st = shelfAt(f, L);
@@ -70,7 +71,7 @@ export const DhunApp: React.FC<{ f: number; L: Layout; opacity: number }> = ({ f
   };
 
   // timeline
-  const bins = SPAN * (L.timeline.w < 560 ? 3 : 6);
+  const bins = SPAN * (L.timeline.w < 560 ? (SPAN > 40 ? 2 : 3) : (SPAN > 40 ? 4 : 6));
   const counts = new Array(bins).fill(0);
   st.list.forEach((a: any) => counts[clamp(Math.floor(((a.t - Y0) / SPAN) * bins), 0, bins - 1)]++);
   const bw = L.timeline.w / bins;
@@ -85,7 +86,7 @@ export const DhunApp: React.FC<{ f: number; L: Layout; opacity: number }> = ({ f
   const langPress = press(f, B.langClick);
 
   const casePress = press(f, B.caseClick);
-  const openId = f >= B.discOut[0] - 2 ? st.focus.id : null;
+  const openId = f >= B.discOut[0] - 2 && st.openAmt > 0.001 ? payoffAlbum(L).id : null;
 
   return (
     <div className="app" style={{ opacity }}>
@@ -94,20 +95,24 @@ export const DhunApp: React.FC<{ f: number; L: Layout; opacity: number }> = ({ f
         <div className="genre">
           <label className="mono lab">Genre</label>
           <div className="g-wrap">
-            <input className="rng" type="range" min={0} max={6} step="any" value={st.genre} readOnly />
+            <input className="rng" type="range" min={0} max={GENRE_LIST.length} step="any" value={st.genre} readOnly />
             <div className="g-stops">
-              {["All", ...GENRES].map((g: string, i: number) => (
-                <button key={g} className={"g-stop" + (Math.round(st.genre) === i ? " on" : "")} style={{ left: (i / 6) * 100 + "%", transform: `translateX(-50%) scale(${i === 2 ? press(f, B.genreClick) : 1})` }}>
-                  <i></i><span><span className="long">{g}</span><span className="short">{i ? ["Amb", "Jazz", "Elec", "Rock", "Folk", "Pop"][i - 1] : "All"}</span></span>
+              {["All", ...GENRE_LIST].map((g: string, i: number) => (
+                <button key={g} className={"g-stop" + (Math.round(st.genre) === i ? " on" : "")} style={{ left: (i / GENRE_LIST.length) * 100 + "%", transform: `translateX(-50%) scale(${i === FILM ? press(f, B.genreClick) : 1})` }}>
+                  <i></i><span><span className="long">{g}</span><span className="short">{i ? SHORT[g] || g : "All"}</span></span>
                 </button>
               ))}
             </div>
           </div>
         </div>
         <div className="lang">
+          <button className="add-btn" style={L.kind === "mob" ? { transform: `scale(${press(f, B.drop - 10)})`, background: f >= B.drop - 10 && f < B.drop ? "var(--ink)" : undefined, color: f >= B.drop - 10 && f < B.drop ? "var(--paper)" : undefined } : undefined}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg><span>Your music</span>
+          </button>
           <div className="select" style={{ transform: `scale(${langPress})` }}>
             <select value={st.lang} onChange={() => {}}>
               {LANG_ITEMS.map(([c, n]) => <option key={c} value={c}>{n}</option>)}
+              {f >= B.ownFilter[0] && <option value="me">My music</option>}
             </select>
             {menuShown && (
               <div className="lmenu" style={{ width: L.menu.w, opacity: eout(menuT) * (1 - menuOut), transform: `scale(${(0.94 + 0.06 * eout(menuT)) * (1 - 0.04 * menuOut)})` }}>
@@ -179,14 +184,17 @@ export const DhunApp: React.FC<{ f: number; L: Layout; opacity: number }> = ({ f
           <div className="pin" style={{ left: pinPct.toFixed(3) + "%" }}><b style={{ opacity: st.scrub ? 1 : 0 }}>{pinYear}</b></div>
           <div className="years">
             {Array.from({ length: SPAN }, (_, k) => {
-              const y = Y0 + k, major = y % 5 === 0;
-              return <span key={y} className={(major ? "" : "minor") + (y === pinYear ? " on" : "")} style={{ left: (((k + 0.5) / SPAN) * 100).toFixed(3) + "%" }}>{major ? y : "’" + String(y).slice(2)}</span>;
+              const y = Y0 + k, wide = SPAN > 40;
+              if (wide && y % 5) return null;
+              const major = wide ? y % 10 === 0 : y % 5 === 0, lab = wide ? pinYear - (pinYear % 5) : pinYear;
+              return <span key={y} className={(major ? "" : "minor") + (y === lab ? " on" : "")} style={{ left: (((k + 0.5) / SPAN) * 100).toFixed(3) + "%" }}>{major ? y : "’" + String(y).slice(2)}</span>;
             })}
           </div>
         </div>
       </section>
 
-      {f >= B.wipe[0] && <AlbumPage f={f} L={L} al={st.focus} S={S} floorY={floorY} />}
+      {f >= B.wipe[0] && f < B.closeWipe[1] && <AlbumPage f={f} L={L} al={payoffAlbum(L)} S={S} floorY={floorY} />}
+      <DropLayer f={f} L={L} />
     </div>
   );
 };
@@ -202,8 +210,9 @@ const AlbumPage: React.FC<{ f: number; L: Layout; al: any; S: number; floorY: nu
   const cx = L.stage.w / 2 + 0.62 * W * S * 1.05, cy = L.stage.y + floorY - (H / 2) * S;
   const maxR = Math.hypot(Math.max(cx, L.app.w - cx), Math.max(cy, L.app.h - cy)) + 24;
   const wt = prog(f, B.wipe[0], B.wipe[1]);
-  const wE = 1 - Math.pow(1 - eio(wt), 1.6);
-  const r = lerp(138 * S * 0.3, maxR, wE);
+  const ct = prog(f, B.closeWipe[0], B.closeWipe[1]);
+  const wE = (1 - Math.pow(1 - eio(wt), 1.6)) * (1 - Math.pow(eio(ct), 1.2));
+  const r = lerp(ct > 0 ? 0 : 138 * S * 0.3, maxR, wE);
   const flashT = prog(f, B.wipe[0], B.wipe[0] + 21);
   const flash = flashT < 0.25 ? 1 : 1 - (flashT - 0.25) / 0.75;
   const R0 = B.reveal;
@@ -217,11 +226,11 @@ const AlbumPage: React.FC<{ f: number; L: Layout; al: any; S: number; floorY: nu
   const hd = site(prog(f, R0 + 8, R0 + 41));
   const playSec = Math.max(0, (f - B.wipe[0]) / 30);
   const tr = al.tracks[0];
-  const p = playSec / tr.sec;
+  const p = Math.min(1, playSec / 30); // Apple previews run 30 seconds
   const eq = (k: number) => 0.25 + 0.75 * Math.abs(Math.sin(f * [0.31, 0.47, 0.23][k] + k * 1.7));
   return (
     <section className="detail on" aria-hidden="true"
-      style={{ visibility: "visible", clipPath: wt >= 1 ? "none" : `circle(${r.toFixed(1)}px at ${cx.toFixed(1)}px ${cy.toFixed(1)}px)`, ["--bg" as any]: al.pal.bg, ["--ink" as any]: al.pal.ink, ["--d" as any]: al.pal.d, ["--flash" as any]: clamp(flash, 0, 1).toFixed(3) }}>
+      style={{ visibility: "visible", clipPath: wt >= 1 && ct <= 0 ? "none" : `circle(${r.toFixed(1)}px at ${cx.toFixed(1)}px ${cy.toFixed(1)}px)`, ["--bg" as any]: al.pal.bg, ["--ink" as any]: al.pal.ink, ["--d" as any]: al.pal.d, ["--flash" as any]: clamp(flash, 0, 1).toFixed(3) }}>
       <div className="d-num">{al.cat.slice(4)}</div>
       <div className="d-top">
         <button className="back-btn">× Back to the shelf</button>
@@ -232,8 +241,9 @@ const AlbumPage: React.FC<{ f: number; L: Layout; al: any; S: number; floorY: nu
           <p className="d-kicker mono" style={rv(0)}><i></i><span>{`${al.genre} · ${al.langName} · ${al.year}`}</span></p>
           <p className="d-artist" style={rv(1)}>{al.artist}</p>
           <h1 className="d-title"><span style={{ transform: `translateY(${((1 - tT) * 108).toFixed(2)}%)` }}>{al.title}</span></h1>
-          <p className="d-meta mono" style={rv(3)}>{`${al.tracks.length} tracks / ${al.mins} min / compact disc`}</p>
-          <p className="d-blurb" style={rv(4)}>{al.blurb}</p>
+          <p className="d-meta mono" style={rv(3)}>{`${al.tracks.length} tracks / ${al.year} / 30-second previews`}</p>
+          <p className="d-blurb" style={rv(4)}>You’re hearing 30-second previews from Apple Music.</p>
+          <a className="d-link" style={rv(4)}><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l11-2v12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="17.5" cy="16" r="2.5" /></svg>Full album on Apple Music</a>
           <ol className="d-tracks" style={rv(5)}>
             {al.tracks.map((t: any, i: number) => (
               <li key={i}>
@@ -265,12 +275,12 @@ const AlbumPage: React.FC<{ f: number; L: Layout; al: any; S: number; floorY: nu
         </div>
         <div className="p-now">
           <span className="p-title">{tr.name}</span>
-          <span className="p-sub mono">{`01 / ${String(al.tracks.length).padStart(2, "0")} · ${al.artist}`}</span>
+          <span className="p-sub mono">{`Preview · 01 / ${String(al.tracks.length).padStart(2, "0")} · ${al.artist}`}</span>
         </div>
         <div className="p-seek">
           <span>{fmt(playSec)}</span>
           <input className="rng" type="range" min={0} max={1000} value={Math.round(p * 1000)} readOnly style={{ ["--p" as any]: (p * 100).toFixed(2) + "%" }} />
-          <span>{fmt(tr.sec)}</span>
+          <span>0:30</span>
         </div>
         <div className="p-vol">
           <button className="p-btn" dangerouslySetInnerHTML={html(ICON.vol)} />
@@ -278,5 +288,34 @@ const AlbumPage: React.FC<{ f: number; L: Layout; al: any; S: number; floorY: nu
         </div>
       </div>
     </section>
+  );
+};
+
+/** "Your music": the drop overlay, the reading bar, and the toast once the albums land */
+const DropLayer: React.FC<{ f: number; L: Layout }> = ({ f, L }) => {
+  const desk = L.kind === "desk";
+  const enter = desk ? B.dragEnter : B.drop;
+  const show = f >= enter && f < B.overlayOut[1];
+  const o = eout(prog(f, enter, enter + 8)) * (1 - prog(f, B.overlayOut[0], B.overlayOut[1]));
+  const reading = f >= B.drop;
+  const bar = prog(f, B.reading[0], B.reading[1]);
+  const tIn = prog(f, B.toast[0], B.toast[0] + 10), tOut = prog(f, B.toast[1] - 8, B.toast[1]);
+  return (
+    <>
+      {show && (
+        <div className="drop on" style={{ position: "absolute", opacity: o, transition: "none" }}>
+          <div className="drop-card" style={{ transform: `scale(${(0.96 + 0.04 * eout(prog(f, enter, enter + 12))).toFixed(4)})`, borderStyle: reading ? "solid" : "dashed" }}>
+            <b>{reading ? "Reading your music…" : "Drop your music here"}</b>
+            <p>{reading ? "4 albums, 16 files, on this device." : "A folder or audio files. Albums are read from the files’ own tags and covers, on this device. Nothing is uploaded."}</p>
+            {reading && <div className="bar"><i style={{ width: (eout(bar) * 100).toFixed(1) + "%" }} /></div>}
+          </div>
+        </div>
+      )}
+      {f >= B.toast[0] && f < B.toast[1] && (
+        <div className="toast on" style={{ position: "absolute", transition: "none", opacity: eout(tIn) * (1 - tOut), transform: `translate(-50%, ${((1 - eout(tIn)) * 20).toFixed(2)}px)`, whiteSpace: desk ? "nowrap" : "normal" }}>
+          Added 4 albums from your music. They stay on this device.
+        </div>
+      )}
+    </>
   );
 };

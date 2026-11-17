@@ -2,52 +2,239 @@
   "fps": 30,
   "duration": 900,
   "scenes": {
-    "hook": [0, 105],
-    "problem": [105, 240],
-    "shelf": [240, 600],
-    "payoff": [600, 765],
-    "logo": [765, 900]
+    "hook": [
+      0,
+      90
+    ],
+    "problem": [
+      90,
+      210
+    ],
+    "shelf": [
+      210,
+      510
+    ],
+    "payoff": [
+      510,
+      645
+    ],
+    "yourMusic": [
+      645,
+      780
+    ],
+    "logo": [
+      780,
+      900
+    ]
   },
   "captions": [
-    { "words": ["Thousands", "of", "songs."], "in": 6, "out": 48 },
-    { "words": ["One", "endless", "list."], "in": 54, "out": 100 },
-    { "words": ["Scroll.", "Scroll.", "Scroll."], "wordIns": [112, 137, 162], "out": 186 },
-    { "words": ["Music,", "on", "a", "shelf."], "in": 254, "out": 324 },
-    { "words": ["Browse", "by", "year."], "in": 334, "out": 414 },
-    { "words": ["By", "genre."], "in": 424, "out": 504 },
-    { "words": ["By", "language."], "in": 514, "out": 594 },
-    { "words": ["Pull", "a", "disc.", "Press", "play."], "in": 606, "out": 758 }
+    {
+      "words": [
+        "Thousands",
+        "of",
+        "songs."
+      ],
+      "in": 5,
+      "out": 40
+    },
+    {
+      "words": [
+        "One",
+        "endless",
+        "list."
+      ],
+      "in": 46,
+      "out": 86
+    },
+    {
+      "words": [
+        "Scroll.",
+        "Scroll.",
+        "Scroll."
+      ],
+      "wordIns": [
+        96,
+        117,
+        138
+      ],
+      "out": 160
+    },
+    {
+      "words": [
+        "Music,",
+        "on",
+        "a",
+        "shelf."
+      ],
+      "in": 224,
+      "out": 282
+    },
+    {
+      "words": [
+        "Sixty",
+        "years.",
+        "One",
+        "drag."
+      ],
+      "in": 290,
+      "out": 366
+    },
+    {
+      "words": [
+        "By",
+        "genre."
+      ],
+      "in": 372,
+      "out": 436
+    },
+    {
+      "words": [
+        "By",
+        "language."
+      ],
+      "in": 442,
+      "out": 506
+    },
+    {
+      "words": [
+        "Pull",
+        "a",
+        "disc.",
+        "Press",
+        "play."
+      ],
+      "in": 512,
+      "out": 640
+    },
+    {
+      "words": [
+        "Add",
+        "your",
+        "own",
+        "music."
+      ],
+      "in": 650,
+      "out": 712
+    },
+    {
+      "words": [
+        "Full",
+        "songs.",
+        "Never",
+        "uploaded."
+      ],
+      "in": 716,
+      "out": 774
+    }
   ],
-  "tagline": "Thirty years of music. One shelf.",
+  "tagline": "Real albums. Your music. One shelf.",
   "cta": "Open the shelf",
   "beats": {
-    "flicks": [112, 137, 162],
-    "scrollStop": [176, 196],
-    "morph": [190, 224],
-    "crossfade": [230, 250],
-    "chromeIn": [244, 270],
-    "cursorIn": 322,
-    "yearGrab": 345,
-    "yearDrag": [350, 400],
-    "yearRelease": 402,
-    "yearSettle": [402, 414],
-    "yearTarget": 2019.45,
-    "genreClick": 438,
-    "genreFilter": [444, 468],
-    "langClick": 528,
-    "menuOpen": [532, 546],
-    "tamilClick": 556,
-    "menuClose": [558, 566],
-    "langFilter": [560, 584],
-    "caseClick": 618,
-    "discOut": [624, 646],
-    "wipe": [652, 676],
-    "reveal": 657,
-    "cursorOut": [632, 652],
-    "windowOut": [765, 783],
-    "logoD": 776,
-    "logoLetters": 790,
-    "tagline": 808,
-    "cta": 834
-  }
+    "flicks": [
+      96,
+      117,
+      138
+    ],
+    "scrollStop": [
+      150,
+      170
+    ],
+    "morph": [
+      164,
+      198
+    ],
+    "crossfade": [
+      200,
+      220
+    ],
+    "chromeIn": [
+      214,
+      240
+    ],
+    "cursorIn": 282,
+    "yearGrab": 300,
+    "yearDrag": [
+      304,
+      352
+    ],
+    "yearRelease": 354,
+    "yearSettle": [
+      354,
+      366
+    ],
+    "yearTarget": 2021.4,
+    "genreClick": 384,
+    "genreFilter": [
+      390,
+      414
+    ],
+    "langClick": 452,
+    "menuOpen": [
+      456,
+      470
+    ],
+    "tamilClick": 478,
+    "menuClose": [
+      480,
+      488
+    ],
+    "langFilter": [
+      482,
+      506
+    ],
+    "caseClick": 522,
+    "discOut": [
+      528,
+      550
+    ],
+    "wipe": [
+      556,
+      580
+    ],
+    "reveal": 561,
+    "cursorOut": [
+      536,
+      556
+    ],
+    "closeWipe": [
+      644,
+      666
+    ],
+    "discBack": [
+      652,
+      672
+    ],
+    "ownCursorIn": 662,
+    "dragEnter": 676,
+    "drop": 690,
+    "reading": [
+      690,
+      708
+    ],
+    "overlayOut": [
+      708,
+      716
+    ],
+    "ownFilter": [
+      712,
+      738
+    ],
+    "toast": [
+      718,
+      774
+    ],
+    "ownCursorOut": [
+      694,
+      708
+    ],
+    "windowOut": [
+      780,
+      798
+    ],
+    "logoD": 790,
+    "logoLetters": 803,
+    "tagline": 818,
+    "cta": 842
+  },
+  "taglineBreakAfter": "music."
 }

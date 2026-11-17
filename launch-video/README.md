@@ -12,11 +12,15 @@ Full storyboard with frames from both cuts: [`Dhun-launch-storyboard.pdf`](Dhun-
 
 | Scene | Time | Frames | What happens |
 |---|---|---|---|
-| 1 · Hook | 0–3.5 s | 0–105 | A grey music list scrolls. "Thousands of songs." "One endless list." |
-| 2 · Problem | 3.5–8 s | 105–240 | Three flicks blur the list. "Scroll. Scroll. Scroll." Rows tip upright into coloured spines. |
-| 3 · The shelf | 8–20 s | 240–600 | Shelf reveal, then year scrub, genre (Jazz) and language (Tamil). |
-| 4 · Payoff | 20–25.5 s | 600–765 | Click the front case, the CD slides out spinning, the album page opens and plays. |
-| 5 · Logo + CTA | 25.5–30 s | 765–900 | Dhun mark builds, tagline, "Open the shelf". |
+| 1 · Hook | 0–3 s | 0–90 | A grey music list scrolls. "Thousands of songs." "One endless list." |
+| 2 · Problem | 3–7 s | 90–210 | Three flicks blur the list. "Scroll. Scroll. Scroll." Rows tip upright into coloured spines. |
+| 3 · The shelf | 7–17 s | 210–510 | Shelf reveal on the drop, year drag 1962 → 2021 ("Sixty years. One drag."), genre → Film, language → Tamil. |
+| 4 · Payoff | 17–21.5 s | 510–645 | Click the front case, the CD slides out spinning, the album page plays a 30-second preview with the Apple Music link. |
+| 5 · Your music | 21.5–26 s | 645–780 | Back to the shelf. A music folder is dropped in (phone: the + button), files are read, four albums land under "My music". |
+| 6 · Logo + CTA | 26–30 s | 780–900 | Dhun mark builds, "Real albums. Your music. One shelf.", "Open the shelf". |
+
+Album covers in the video are invented on purpose: no label artwork in an advert. The layout, genres,
+languages and 1955–2024 timeline match the live site. The storyboard PDF describes the first cut (v1).
 
 ## Edit
 

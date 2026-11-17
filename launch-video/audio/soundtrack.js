@@ -19,18 +19,19 @@ api.soundtrack = async (P) => {
   const end = SECS;
   // the muffled "before" sits ~6 dB under the drop so the shelf reveal lands
   out.gain.setValueAtTime(0.95, 0);
-  out.gain.setValueAtTime(0.95, 3.8);
-  out.gain.linearRampToValueAtTime(0.5, 4.0);
+  out.gain.setValueAtTime(0.95, fr2s(P.scenes.hook[1]) - 0.1);
+  out.gain.linearRampToValueAtTime(0.5, fr2s(P.scenes.hook[1]) + 0.1);
   out.gain.setValueAtTime(0.5, drop - 0.6);
   out.gain.linearRampToValueAtTime(0.62, drop - 0.02);
   out.gain.setValueAtTime(1, drop);
   out.gain.setValueAtTime(1, end - 1.1);
   out.gain.linearRampToValueAtTime(0, end - 0.05);
 
-  // music: an Electronic track from the catalogue, locked to 120 bpm so bars land on scene cuts
+  // music: an Electronic track from the catalogue, tempo set so the drop lands on a bar line
   const al = ALL.find((a) => a.genre === "Electronic" && a.title === P.trackFrom) || ALL.find((a) => a.genre === "Electronic");
   const S = makeSong(al, 0);
-  S.tempo = 120; S.step = 0.125; S.bar = 2; S.bars = 16; S.steps = 240; S.brk0 = 999;
+  const BAR = drop / 4; // four bars of build, then the drop on the shelf reveal
+  S.bar = BAR; S.step = BAR / 16; S.tempo = Math.round(240 / BAR); S.bars = Math.ceil(SECS / BAR); S.steps = S.bars * 16; S.brk0 = 999;
   bus = makeBus();
   dly.delayTime.value = S.step * 3;
   const stopAt = fr2s(P.beats.windowOut[0]);
@@ -95,6 +96,14 @@ api.soundtrack = async (P) => {
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.05, t0 + 0.6); g.gain.linearRampToValueAtTime(0, t0 + 1.6);
     os.connect(f2); f2.connect(g); g.connect(D); os.start(t0); os.stop(t0 + 1.7); }
   sweep(fr2s(B.wipe[0]), 0.8, 250, 5000, 0.2, "bandpass", 0.9, Wt);
+  // your music: back to the shelf, a folder dragged in and dropped, files read, albums land
+  sweep(fr2s(B.closeWipe[0]), 0.7, 5000, 300, 0.16, "bandpass", 0.9, Wt);
+  V({ f: 660, t: fr2s(B.dragEnter), dur: 0.06, peak: 0.06, a: 0.004, r: 0.12, dest: Sp });
+  { const t = fr2s(B.drop); kick(t, D, 0.45); bell(t + 0.02, fr(S.root + 31), Sp, 0.09); bell(t + 0.1, fr(S.root + 36), Sp, 0.07); }
+  for (let k = 0; k < 8; k++) click(fr2s(B.reading[0]) + 0.08 + k * ((fr2s(B.reading[1]) - fr2s(B.reading[0]) - 0.1) / 8), 0.05, 2800 + k * 180);
+  sweep(fr2s(B.ownFilter[0]), 0.6, 600, 2800, 0.13, "bandpass", 1, Wt);
+  V({ f: fr(S.root + 28), t: fr2s(B.toast[0]), dur: 0.05, peak: 0.06, a: 0.004, r: 0.1, dest: Sp });
+  V({ f: fr(S.root + 33), t: fr2s(B.toast[0]) + 0.07, dur: 0.05, peak: 0.05, a: 0.004, r: 0.12, dest: Sp });
   // end card: hit, then a bell for D, h, u, n, and the CTA
   const tEnd = fr2s(B.logoD);
   boom(tEnd, 0.55);

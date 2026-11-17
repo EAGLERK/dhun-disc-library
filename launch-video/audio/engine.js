@@ -8,12 +8,13 @@ function rng32(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(
 function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
 function hs(seed,b,s){let h=Math.imul((seed^Math.imul(b+1,374761393)^Math.imul(s+1,668265263))|0,2246822519);h^=h>>>13;h=Math.imul(h,3266489917);return(h^h>>>16)>>>0}
 const fmt=sec=>{sec=Math.max(0,Math.floor(sec));return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0")};
+const dur=t=>t.sec?fmt(t.sec):"–:––";
 
 /* ───────── catalogue (invented albums) ───────── */
 const GENRES=["Ambient","Jazz","Electronic","Rock","Folk","Pop"];
 const GSHORT=["Amb","Jazz","Elec","Rock","Folk","Pop"];
 const LANGS=[["en","English"],["hi","Hindi"],["ta","Tamil"],["es","Spanish"],["ja","Japanese"]];
-const Y0=1995,Y1=2024,SPAN=Y1-Y0+1;
+let Y0=1995,Y1=2024,SPAN=Y1-Y0+1;
 const RAW={
 en:[[["Low Cloud Atlas","Harbour Lights Ensemble"],["Rooms Without Clocks","Ines Varga"],["Slow Weather","Pale Meridian"],["Tidewater Tapes","North Annex"]],
     [["Blue Hour Ledger","Eddie Marlowe Trio"],["Corner Table","Lena Okafor Quartet"],["After the Matinee","Wendell Price Five"],["Small Hours, Big Rooms","June Halloran"]],
@@ -136,7 +137,7 @@ function coverSVG(al){
 }
 
 /* build the 120 albums */
-const ALL=(()=>{
+const DEMO=(()=>{
   const out=[];
   LANGS.forEach(([lc,ln])=>GENRES.forEach((g,gi)=>RAW[lc][gi].forEach(([title,artist])=>out.push({title,artist,lang:lc,langName:ln,genre:g,gi}))));
   const r=rng32(20261117);
@@ -144,7 +145,7 @@ const ALL=(()=>{
   const perYear=out.length/SPAN, gk={};
   out.forEach((al,i)=>{
     al.year=Y0+Math.floor(i/perYear); al.t=al.year+((i%perYear)+.5)/perYear;
-    al.id="a"+i; al.cat="DHN-"+String(i+1).padStart(3,"0"); al.seed=hashStr(al.title+al.artist);
+    al.id="a"+i; al.kind="synth"; al.cat="DHN-"+String(i+1).padStart(3,"0"); al.seed=hashStr(al.title+al.artist);
     al.pal=PALS[(i*5+(i>>3))%PALS.length]; al.motif=(al.seed>>>3)%MOTIFS.length;
     const rr=rng32(al.seed),pool=TRACKS[al.lang].slice(),n=5+Math.floor(rr()*3),[d0,d1]=DUR[al.genre];
     al.tracks=[];
@@ -158,12 +159,49 @@ const ALL=(()=>{
   });
   return out;
 })();
-const byId=new Map(ALL.map(a=>[a.id,a]));
+let ALL=DEMO, byId=new Map(ALL.map(a=>[a.id,a]));
+let SHELF_GENRES=GENRES.slice(), SHELF_LANGS=LANGS.slice(), CATALOG=null, REAL=null, OWN=[], MODE="demo";
+const OWN_GENRES=["Pop","Rock","Electronic","Jazz","Folk","Film"];
+const SHORT={Ambient:"Amb",Electronic:"Elec",Other:"Misc"};
 
-const coverText=al=>`<div class="c-head"><span class="c-artist">${esc(al.artist)}</span><span class="c-cat">${al.cat}</span><b class="c-title${al.title.length>17?" long":""}">${esc(al.title)}</b></div>
+/* colours for real artwork: spine colour from the catalog, a deeper tone for the album page */
+const hexRGB=h=>{h=h.replace("#","");if(h.length===3)h=h.replace(/./g,"$&$&");return[0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255)};
+const rgbHex=c=>"#"+c.map(v=>Math.round(clamp(v,0,1)*255).toString(16).padStart(2,"0")).join("");
+const lumOf=c=>.2126*c[0]+.7152*c[1]+.0722*c[2];
+function palFrom(bg,ink){
+  const c=hexRGB(bg),l=lumOf(c);
+  const d=l>.32?rgbHex(c.map(v=>v*(.3/l))):l<.04?"#3a3d42":bg;
+  return {bg,ink:ink||(l>.55?"#14161a":"#f6f5f2"),d,art:[bg,ink,ink,ink]};
+}
+function fromCatalog(c){
+  const names=Object.fromEntries(c.languages||[]);
+  return c.albums.map(x=>{
+    const al={kind:"itunes",id:x.id,title:x.title,artist:x.artist,year:x.year,genre:x.genre,lang:x.lang,langName:names[x.lang]||x.lang,
+      art:x.art,url:x.url,copyright:x.copyright||"",trackCount:x.trackCount||x.tracks.length,seed:hashStr(x.id),
+      tracks:x.tracks.map(t=>({name:t.name,sec:Math.round((t.ms||0)/1000),preview:t.preview}))};
+    al.pal=palFrom(x.bg||"#3a3d42",x.ink);al.accent=al.pal.ink;al.coverUrl=`url('${String(x.art).replace(/'/g,"%27")}')`;
+    al.mins=Math.round(al.tracks.reduce((s,t)=>s+t.sec,0)/60);
+    return al;
+  });
+}
+/* order albums by year, spread each year's discs along the timeline, number the shelf */
+function finalize(albums){
+  const ys=albums.map(a=>a.year).filter(Boolean);
+  const lo=Math.min(...ys),hi=Math.max(...ys);
+  albums.forEach(a=>{if(!a.year)a.year=hi});
+  albums.sort((a,b)=>a.year-b.year||(a.kind==="file")-(b.kind==="file")||a.artist.localeCompare(b.artist)||a.title.localeCompare(b.title));
+  const per={};albums.forEach(a=>{(per[a.year]=per[a.year]||[]).push(a)});
+  Object.values(per).forEach(g=>g.forEach((a,i)=>{a.t=a.year+(i+.5)/g.length}));
+  let n=0,m=0;albums.forEach(a=>{a.cat=a.kind==="file"?"YOU-"+String(++m).padStart(3,"0"):"DHN-"+String(++n).padStart(3,"0")});
+  Y0=Math.floor(lo/5)*5;Y1=Math.max(Math.ceil((hi+1)/5)*5-1,Y0+9);SPAN=Y1-Y0+1;
+  return albums;
+}
+
+const coverText=al=>al.art?"":`<div class="c-head"><span class="c-artist">${esc(al.artist)}</span><span class="c-cat">${al.cat}</span><b class="c-title${al.title.length>17?" long":""}">${esc(al.title)}</b></div>
 <div class="c-foot"><span><i></i>DHUN</span><span>${al.year}</span></div>`;
 let discUid=0;
 function discHTML(al){
+  if(al.art)return `<div class="disc"><div class="disc-print art" style="background-image:url('${al.art}')"></div><div class="disc-fx"></div><div class="disc-hub"></div></div>`;
   const u="dp"+(++discUid),{bg,ink}=al.pal,txt=`${al.title} · ${al.artist} · ${al.cat} · ${al.year} · `.toUpperCase();
   return `<div class="disc"><div class="disc-print"><svg viewBox="0 0 200 200" aria-hidden="true">
 <circle cx="100" cy="100" r="100" fill="${bg}"/>
@@ -390,6 +428,7 @@ const Player=(()=>{
     if(was||auto)start();else emit();
   }
   api.unlock=unlock;
+  api.stop=()=>{if(playing)pause()};
   api.playAlbum=al=>{if(!unlock())return;if(album===al&&song){if(!playing)start();else emit();return}stopQuiet();load(al,0);start()};
   api.playTrack=i=>{if(!album||!unlock())return;stopQuiet();load(album,clamp(i,0,album.tracks.length-1));start()};
   api.toggle=()=>{if(!song)return;if(playing)pause();else if(unlock())start()};

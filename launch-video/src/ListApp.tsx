@@ -4,8 +4,8 @@ import React from "react";
 import cfg from "./config.json";
 import { Layout } from "./layout";
 import { clamp, lerp, prog, eio, eout, ein } from "./anim";
-import { ALL, fmt } from "./site/catalogue";
-import { geometry, listGeom, STEP, PUSH, W, H } from "./shelf";
+import { fmt } from "./site/catalogue";
+import { geometry, listGeom, STEP, PUSH, W, H, CAT as ALL } from "./shelf";
 import { smooth } from "./anim";
 
 const B = cfg.beats;
